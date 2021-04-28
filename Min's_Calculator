@@ -1,0 +1,221 @@
+from tkinter import *
+
+
+def makebtn(btn_root, value, command=NONE):
+    return Button(btn_root, text=value, relief=GROOVE,
+                  font=("Arial Rounded MT Bold", 17), width=1, height=1,
+                  background="white", highlightcolor="grey",
+                  command=command)
+
+
+class MinCalculator:
+    def __init__(self):
+        self.val = ""
+        self.progress = []
+        self.equal = '='
+
+    def is_in_eqaul(self):
+        return self.equal in self.progress
+
+    def input_number(self, num):
+
+        if self.is_in_eqaul():
+            self.all_clear()
+
+        if '.' in self.val and num == '.':
+            return -1
+
+        self.val += str(num)
+        resultLabel.config(text=self.val)
+
+    def input_value(self, value):
+
+        if self.is_in_eqaul():
+            self.progress = [str(resultLabel['text'])]
+            self.progress.append(value)
+        else:
+            if not self.val:
+                try:
+                    self.progress.pop()
+                    self.progress.append(value)
+                except IndexError:
+                    pass
+            else:
+                self.progress.append(self.val)
+                self.progress = [str(eval(''.join(self.progress)))]
+                self.progress.append(value)
+
+        progressLabel.config(text=eval(str(self.progress)))
+        self.val = ""
+
+    def operator(self):
+            if self.is_in_eqaul():
+                self.progress[0] = str(resultLabel['text'])
+            else:
+                if self.val:
+                    self.progress.append(self.val)
+                else:
+                    self.progress.append(self.progress[0])
+                self.progress.append(self.equal)
+            progressLabel.config(text=''.join(self.progress))
+            resultLabel.config(text=eval(''.join(self.progress[:-1])))
+            self.val = ''
+
+    def all_clear(self):
+        self.val = ""
+        self.progress = []
+        resultLabel.config(text='0')
+        progressLabel.config(text='')
+
+    def back_space(self):
+        if self.is_in_eqaul():
+            progressLabel.config(text='')
+        elif self.val != "":
+            self.val = self.val[:-1]
+            resultLabel.config(text=self.val)
+
+    def change_abs(self):
+        if not self.val or self.is_in_eqaul():
+            self.val = resultLabel['text']
+
+        self.val = str(int(self.val) * -1)
+        resultLabel.config(text=self.val)
+
+    # a = a * percent / 100.0
+    def opt_percent(self):
+        if not self.progress:
+            resultLabel.config(text='0')
+            self.val = ''
+        else:
+            if not self.val:
+                self.val = resultLabel['text']
+
+            self.val = str(float(self.progress[0]) * float(self.val) / 100.0)
+
+            if len(self.progress) == 2:
+                progressLabel.config(text=''.join(self.progress) + self.val)
+            else:
+                resultLabel.config(text=self.val)
+                progressLabel.config(text=self.val)
+
+    def key_pressed(self, event):
+        numbers = '1234567890'
+        operators = '/*+-'
+        if not event.char:
+            return -1
+        elif event.char in numbers:
+            self.input_number(event.char)
+        elif event.char in operators:
+            self.input_value(event.char)
+        elif event.char == '\r':
+            self.operator()
+        elif event.char == '%':
+            self.opt_percent()
+        elif event.char == '\x08':
+            self.back_space()
+        elif event.char == '\x1b':
+            self.all_clear()
+
+
+cal1 = MinCalculator()
+
+root = Tk()
+root.title("Min's Calculator")
+root.geometry("350x450")  # 소문자 x로 해줘야 함
+root.resizable(False, False)  # 창크기 고정(변경불가능)
+
+root.bind('<Key>', cal1.key_pressed)
+
+# 과정 출력화면 & 결과값 출력 화면
+
+progressLabel = Label(root, font=("Verdana", 17), anchor=SE, fg="grey", bg="whitesmoke")
+resultLabel = Label(root, text="0", font=("Verdana", 25), anchor=SE, bg="whitesmoke")
+
+progressLabel.pack(expand=True, fill="both")
+resultLabel.pack(expand=True, fill="both")
+
+# 버튼 < 5행(frame 다섯개) 4열 >
+# Row1
+btnRow1 = Frame(root, relief="solid")
+btnRow1.pack(expand=True, fill="both")
+
+btn_percent = makebtn(btnRow1, '%', lambda: cal1.opt_percent())
+btn_div = makebtn(btnRow1, "÷", lambda: cal1.input_value('/'))
+btn_clear = makebtn(btnRow1, "C", lambda: cal1.all_clear())
+btn_backspace = makebtn(btnRow1, "←", lambda: cal1.back_space())
+
+btn_percent.config(bg='gainsboro')
+btn_div.config(bg='gainsboro')
+btn_clear.config(bg='gainsboro')
+btn_backspace.config(bg='gainsboro')
+
+btn_percent.pack(side=LEFT, expand=True, fill="both")
+btn_div.pack(side=LEFT, expand=True, fill="both")
+btn_clear.pack(side=LEFT, expand=True, fill="both")
+btn_backspace.pack(side=LEFT, expand=True, fill="both")
+
+# Row2
+btnRow2 = Frame(root, relief=GROOVE)
+btnRow2.pack(expand=True, fill='both')
+
+btn_num7 = makebtn(btnRow2, '7', lambda: cal1.input_number(7))
+btn_num8 = makebtn(btnRow2, '8', lambda: cal1.input_number(8))
+btn_num9 = makebtn(btnRow2, '9', lambda: cal1.input_number(9))
+btn_multi = makebtn(btnRow2, 'X', lambda: cal1.input_value('*'))
+
+btn_multi.config(bg='gainsboro')
+
+btn_num7.pack(side=LEFT, expand=True, fill="both")
+btn_num8.pack(side=LEFT, expand=True, fill="both")
+btn_num9.pack(side=LEFT, expand=True, fill="both")
+btn_multi.pack(side=LEFT, expand=True, fill="both")
+
+# Row3
+btnRow3 = Frame(root, relief="solid")
+btnRow3.pack(expand=True, fill='both')
+
+btn_num4 = makebtn(btnRow3, '4', lambda: cal1.input_number(4))
+btn_num5 = makebtn(btnRow3, '5', lambda: cal1.input_number(5))
+btn_num6 = makebtn(btnRow3, '6', lambda: cal1.input_number(6))
+btn_sub = makebtn(btnRow3, '-', lambda: cal1.input_value('-'))
+
+btn_sub.config(bg='gainsboro')
+
+btn_num4.pack(side=LEFT, expand=True, fill="both")
+btn_num5.pack(side=LEFT, expand=True, fill="both")
+btn_num6.pack(side=LEFT, expand=True, fill="both")
+btn_sub.pack(side=LEFT, expand=True, fill="both")
+
+# Row4
+btnRow4 = Frame(root, relief="solid")
+btnRow4.pack(expand=True, fill='both')
+
+btn_num1 = makebtn(btnRow4, '1', lambda: cal1.input_number(1))
+btn_num2 = makebtn(btnRow4, '2', lambda: cal1.input_number(2))
+btn_num3 = makebtn(btnRow4, '3', lambda: cal1.input_number(3))
+btn_plus = makebtn(btnRow4, '+', lambda: cal1.input_value('+'))
+
+btn_plus.config(bg='gainsboro')
+
+btn_num1.pack(side=LEFT, expand=True, fill="both")
+btn_num2.pack(side=LEFT, expand=True, fill="both")
+btn_num3.pack(side=LEFT, expand=True, fill="both")
+btn_plus.pack(side=LEFT, expand=True, fill="both")
+
+# Row5
+btnRow5 = Frame(root, relief="solid")
+btnRow5.pack(expand=True, fill='both')
+
+btn_abs = makebtn(btnRow5, '±', lambda: cal1.change_abs())
+btn_zero = makebtn(btnRow5, '0', lambda: cal1.input_number(0))
+btn_point = makebtn(btnRow5, '.', lambda: cal1.input_number('.'))
+btn_operator = makebtn(btnRow5, '=', lambda: cal1.operator())
+
+btn_operator.config(bg="#FF6347")
+
+btn_abs.pack(side=LEFT, expand=True, fill="both")
+btn_zero.pack(side=LEFT, expand=True, fill="both")
+btn_point.pack(side=LEFT, expand=True, fill="both")
+btn_operator.pack(side=LEFT, expand=True, fill="both")
+
+root.mainloop()
