@@ -1,1 +1,1 @@
-# Calculaotr_JavaScript
+# Min's Calculaotrs
